@@ -154,8 +154,10 @@ Pull requests are welcome! For major changes, please open an issue first to disc
 
 ## 👨‍💻 Author
 
-**Omkar Chavan** — CTP Mini Project  
+**Omkar Chavan**  
 GitHub: [@OmkarChavan-dev](https://github.com/OmkarChavan-dev)
+**Shrutika Bhand**
+Github: [@shrutikabhand](https://github.com/shrutikabhand)
 
 ---
 
