@@ -14,6 +14,18 @@ import sys
 import random
 import pygame
 
+# ── Boot pygame and detect fullscreen resolution BEFORE importing any local
+#    module, so every "from settings import *" sees the real screen size. ──
+pygame.init()
+_screen_probe = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
+_SW, _SH = _screen_probe.get_size()
+pygame.display.quit()   # will be re-created properly below
+
+import settings as _settings
+_settings.SCREEN_WIDTH  = _SW
+_settings.SCREEN_HEIGHT = _SH
+
+# Now import everything else — they will read the patched values
 from settings import *
 from utils    import StarField, ParticleManager, SoundManager, render_text, draw_health_bar
 from player   import Player
@@ -28,7 +40,7 @@ from bullet   import Bullet, PowerUp
 class Game:
     def __init__(self):
         pygame.init()
-        self.screen  = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+        self.screen  = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
         pygame.display.set_caption(TITLE)
         self.clock   = pygame.time.Clock()
 
@@ -111,8 +123,6 @@ class Game:
         self.screen.fill(BLACK)
         self.stars.draw(self.screen)
 
-        # Decorative enemies drifting across
-        # (purely visual, not tracked as sprites)
         title = render_text(self.font_xl, "SPACE SHOOTER", CYAN)
         sub   = render_text(self.font_lg, "Press any key to begin", WHITE)
         hint  = render_text(self.font_sm, "WASD / Arrow Keys  ·  SPACE to shoot  ·  ESC to quit", GREY)
@@ -123,7 +133,6 @@ class Game:
         self.screen.blit(hint,  hint.get_rect(center=(SCREEN_WIDTH // 2, 340)))
         self.screen.blit(hs,    hs.get_rect(center=(SCREEN_WIDTH // 2, 400)))
 
-        # Controls panel
         controls = [
             ("Move",  "WASD / Arrow Keys"),
             ("Shoot", "SPACE"),
@@ -133,8 +142,8 @@ class Game:
         for action, key in controls:
             a = self.font_sm.render(f"{action}:", True, LIGHT_GREY)
             k = self.font_sm.render(key,          True, CYAN)
-            self.screen.blit(a, (280, panel_y))
-            self.screen.blit(k, (380, panel_y))
+            self.screen.blit(a, (SCREEN_WIDTH // 2 - 100, panel_y))
+            self.screen.blit(k, (SCREEN_WIDTH // 2,       panel_y))
             panel_y += 26
 
     # ── PLAYING update ────────────────────────────────────────────────────
@@ -173,7 +182,6 @@ class Game:
             self.sound.play_boom()
             self.player.score += SCORE_PER_KILL
 
-            # Chance to drop power-up
             if random.random() < POWERUP_CHANCE:
                 pu = PowerUp(cx, cy)
                 self.powerups.add(pu)
@@ -214,7 +222,6 @@ class Game:
         self.screen.fill(BLACK)
         self.stars.draw(self.screen)
 
-        # Sprites
         self.powerups.draw(self.screen)
         self.all_sprites.draw(self.screen)
         self.bullets.draw(self.screen)
@@ -224,20 +231,16 @@ class Game:
         # ── HUD ───────────────────────────────────────────────────────────
         p = self.player
 
-        # Score
         score_surf = render_text(self.font_md, f"Score: {p.score}", WHITE)
         self.screen.blit(score_surf, (10, 10))
 
-        # Lives
         lives_surf = render_text(self.font_md, f"Lives: {'♥ ' * p.lives}", RED)
         self.screen.blit(lives_surf, (10, 36))
 
-        # Health bar
         hp_label = render_text(self.font_sm, "HP", GREY, shadow=False)
         self.screen.blit(hp_label, (10, 64))
         draw_health_bar(self.screen, 36, 65, p.health, Player.MAX_HEALTH)
 
-        # Active power-ups
         hud_y = 84
         if p.shield_active:
             s = render_text(self.font_sm, "⚡ SHIELD", CYAN)
@@ -246,11 +249,9 @@ class Game:
             s = render_text(self.font_sm, "⚡ RAPID FIRE", YELLOW)
             self.screen.blit(s, (10, hud_y))
 
-        # High score (top right)
         hs = render_text(self.font_md, f"Best: {self.high_score}", GREY)
         self.screen.blit(hs, (SCREEN_WIDTH - hs.get_width() - 10, 10))
 
-        # Difficulty level (approx)
         level = int((SPAWN_INTERVAL_START - self._spawn_interval) /
                     (SPAWN_INTERVAL_START - SPAWN_INTERVAL_MIN) * 10) + 1
         lvl = render_text(self.font_sm, f"Level {level}", GREY)
@@ -267,7 +268,6 @@ class Game:
         self.stars.draw(self.screen)
         self.particles.draw(self.screen)
 
-        # Dim overlay
         overlay = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT), pygame.SRCALPHA)
         overlay.fill((0, 0, 0, 160))
         self.screen.blit(overlay, (0, 0))
