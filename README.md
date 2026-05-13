@@ -146,6 +146,14 @@ numpy>=1.20.0   # optional, for sound effects
 
 ---
 
+## 🚀 Future Enhancements
+
+- Boss battles
+- Multiplayer mode
+- Sound settings
+- New enemy types
+- Saveable high scores
+
 ## 🤝 Contributing
 
 Pull requests are welcome! For major changes, please open an issue first to discuss what you'd like to change.
